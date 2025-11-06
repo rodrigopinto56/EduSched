@@ -581,8 +581,9 @@ with tab2:
                 
                 # Calcular huecos totales
                 huecos_totales = 0
-                for grupo in st.session_state.grupos_df['Grupo']:
-                    clases_grupo = st.session_state.horario_generado[st.session_state.horario_generado['Grupo'] == grupo].to_dict('records')
+                for grupo in st.session_state.grupos_df['Grupo'].values:
+                    clases_grupo_df = st.session_state.horario_generado[st.session_state.horario_generado['Grupo'] == grupo]
+                    clases_grupo = clases_grupo_df.to_dict(orient='records')
                     huecos_totales += calcular_huecos_grupo(clases_grupo)
                 
                 st.info(f"📊 Total de horas de hueco en todos los grupos: {huecos_totales:.1f} horas")
@@ -644,7 +645,7 @@ with tab3:
             st.metric("Total de Clases", len(horario_actual))
         
         with col2:
-            grupos_programados = horario_actual['Grupo'].nunique()
+            grupos_programados = int(horario_actual['Grupo'].nunique())
             st.metric("Grupos Programados", grupos_programados)
         
         with col3:
@@ -718,15 +719,18 @@ with tab4:
                         except:
                             return 7.0
                     
-                    df_nuevo['Hora_Inicio'] = df_nuevo['Hora_Inicio_Str'].apply(parsear_hora_str)
-                    df_nuevo['Hora_Fin'] = df_nuevo['Hora_Fin_Str'].apply(parsear_hora_str)
+                    df_nuevo['Hora_Inicio'] = pd.Series(df_nuevo['Hora_Inicio_Str']).apply(parsear_hora_str)
+                    df_nuevo['Hora_Fin'] = pd.Series(df_nuevo['Hora_Fin_Str']).apply(parsear_hora_str)
                     
                     # Agregar columna Semestre
-                    df_nuevo = df_nuevo.merge(
-                        st.session_state.grupos_df[['Grupo', 'Semestre']],
-                        on='Grupo',
-                        how='left'
-                    )
+                    if st.session_state.grupos_df is not None:
+                        df_nuevo = df_nuevo.merge(
+                            st.session_state.grupos_df[['Grupo', 'Semestre']],
+                            on='Grupo',
+                            how='left'
+                        )
+                    else:
+                        df_nuevo['Semestre'] = 1
                     
                     # Eliminar columnas temporales
                     df_nuevo = df_nuevo.drop(['Hora_Inicio_Str', 'Hora_Fin_Str'], axis=1)
@@ -749,9 +753,12 @@ with tab4:
         
         with col2:
             if st.button("🔄 Restaurar Horario Original"):
-                st.session_state.horario_editado = st.session_state.horario_generado.copy()
-                st.success("✅ Horario restaurado al original generado")
-                st.rerun()
+                if st.session_state.horario_generado is not None:
+                    st.session_state.horario_editado = st.session_state.horario_generado.copy()
+                    st.success("✅ Horario restaurado al original generado")
+                    st.rerun()
+                else:
+                    st.error("No hay horario original para restaurar")
         
         st.divider()
         
