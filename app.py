@@ -7,6 +7,7 @@ from reportlab.lib.pagesizes import letter, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 import plotly.graph_objects as go
+import db
 
 # Configuración de la página
 st.set_page_config(
@@ -31,6 +32,12 @@ if 'horario_editado' not in st.session_state:
 DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']
 HORA_INICIO = 7
 HORA_FIN = 21
+
+# Inicializar base de datos
+try:
+    db.init_db()
+except Exception as e:
+    st.error(f"Error al inicializar la base de datos: {str(e)}")
 
 # Título principal
 st.title("📅 Generador de Horarios Académicos")
@@ -153,9 +160,41 @@ def calcular_score_asignacion(horario_actual, grupo_nombre, nueva_clase):
     
     return huecos + hora_penalizacion + dia_penalizacion
 
+# Algoritmos alternativos de scoring
+def calcular_score_earliest(horario_actual, grupo_nombre, nueva_clase):
+    """Prioriza las horas más tempranas del día"""
+    huecos = calcular_huecos_grupo([c for c in horario_actual if c['Grupo'] == grupo_nombre] + [nueva_clase])
+    # Fuerte preferencia por horas tempranas
+    return nueva_clase['Hora_Inicio'] * 10 + huecos + DIAS.index(nueva_clase['Dia']) * 0.5
+
+def calcular_score_latest(horario_actual, grupo_nombre, nueva_clase):
+    """Prioriza las horas más tardías del día"""
+    huecos = calcular_huecos_grupo([c for c in horario_actual if c['Grupo'] == grupo_nombre] + [nueva_clase])
+    # Preferencia por horas tardías (inverso)
+    return (HORA_FIN - nueva_clase['Hora_Inicio']) * 10 + huecos
+
+def calcular_score_balanced(horario_actual, grupo_nombre, nueva_clase):
+    """Distribuye equitativamente a lo largo de la semana"""
+    huecos = calcular_huecos_grupo([c for c in horario_actual if c['Grupo'] == grupo_nombre] + [nueva_clase])
+    # Penaliza menos por día de la semana, más por huecos
+    return huecos * 5 + abs(nueva_clase['Hora_Inicio'] - 12) * 0.5
+
+def calcular_score_compact(horario_actual, grupo_nombre, nueva_clase):
+    """Intenta comprimir el horario en menos días de la semana"""
+    huecos = calcular_huecos_grupo([c for c in horario_actual if c['Grupo'] == grupo_nombre] + [nueva_clase])
+    # Fuerte preferencia por los primeros días de la semana
+    return DIAS.index(nueva_clase['Dia']) * 15 + nueva_clase['Hora_Inicio'] + huecos
+
 # Algoritmo mejorado de generación de horarios con minimización de huecos
-def generar_horario(grupos_df, maestros_df, salones_df):
-    """Genera un horario optimizado priorizando semestres avanzados y minimizando huecos"""
+def generar_horario(grupos_df, maestros_df, salones_df, algoritmo='gap_minimization'):
+    """Genera un horario optimizado priorizando semestres avanzados
+    
+    Args:
+        grupos_df: DataFrame con información de grupos
+        maestros_df: DataFrame con disponibilidad de maestros
+        salones_df: DataFrame con información de salones
+        algoritmo: Estrategia de optimización ('gap_minimization', 'earliest', 'latest', 'balanced', 'compact')
+    """
     
     # Ordenar grupos por semestre (descendente)
     grupos_ordenados = grupos_df.sort_values('Semestre', ascending=False).reset_index(drop=True)
@@ -222,8 +261,18 @@ def generar_horario(grupos_df, maestros_df, salones_df):
                         'Semestre': grupo['Semestre']
                     }
                     
-                    # Calcular score
-                    score = calcular_score_asignacion(horario, grupo_nombre, nueva_clase)
+                    # Calcular score según el algoritmo seleccionado
+                    if algoritmo == 'earliest':
+                        score = calcular_score_earliest(horario, grupo_nombre, nueva_clase)
+                    elif algoritmo == 'latest':
+                        score = calcular_score_latest(horario, grupo_nombre, nueva_clase)
+                    elif algoritmo == 'balanced':
+                        score = calcular_score_balanced(horario, grupo_nombre, nueva_clase)
+                    elif algoritmo == 'compact':
+                        score = calcular_score_compact(horario, grupo_nombre, nueva_clase)
+                    else:  # gap_minimization (default)
+                        score = calcular_score_asignacion(horario, grupo_nombre, nueva_clase)
+                    
                     opciones.append((score, nueva_clase))
         
         # Ordenar opciones por score (menor primero)
@@ -465,7 +514,15 @@ def exportar_pdf(horario_df):
     return buffer
 
 # Interfaz principal
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["📥 Cargar Datos", "🤖 Generar Horario", "📊 Ver Horario", "✏️ Editar Horario", "📤 Exportar"])
+tab1, tab1b, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    "📥 Cargar Datos", 
+    "💾 Plantillas",
+    "🤖 Generar Horario", 
+    "📊 Ver Horario", 
+    "✏️ Editar Horario",
+    "💿 Horarios Guardados",
+    "📤 Exportar"
+])
 
 with tab1:
     st.header("Cargar Información")
@@ -542,6 +599,87 @@ with tab1:
         st.success("✅ Datos de ejemplo cargados correctamente")
         st.rerun()
 
+with tab1b:
+    st.header("💾 Gestión de Plantillas")
+    st.info("Guarda y reutiliza configuraciones de grupos, maestros y salones para semestres futuros.")
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        st.markdown("### 💾 Guardar Configuración Actual")
+        
+        if st.session_state.grupos_df is None or st.session_state.maestros_df is None or st.session_state.salones_df is None:
+            st.warning("⚠️ Carga primero los datos en la pestaña 'Cargar Datos'")
+        else:
+            with st.form("save_config_form"):
+                config_name = st.text_input("Nombre de la Plantilla", placeholder="ej: Semestre Otoño 2024")
+                config_description = st.text_area("Descripción (opcional)", placeholder="Describe esta configuración...")
+                
+                submit_save = st.form_submit_button("💾 Guardar Plantilla", type="primary")
+                
+                if submit_save:
+                    if config_name:
+                        try:
+                            config_id = db.save_configuration(
+                                config_name,
+                                config_description,
+                                st.session_state.grupos_df,
+                                st.session_state.maestros_df,
+                                st.session_state.salones_df
+                            )
+                            st.success(f"✅ Plantilla '{config_name}' guardada correctamente (ID: {config_id})")
+                            st.balloons()
+                        except Exception as e:
+                            st.error(f"❌ Error al guardar: {str(e)}")
+                    else:
+                        st.warning("Por favor ingresa un nombre para la plantilla")
+    
+    with col2:
+        st.markdown("### 📂 Cargar Plantilla Guardada")
+        
+        try:
+            configs = db.list_configurations()
+            
+            if len(configs) == 0:
+                st.info("No hay plantillas guardadas aún")
+            else:
+                st.markdown(f"**{len(configs)} plantillas disponibles:**")
+                
+                for config in configs:
+                    with st.expander(f"📋 {config['name']}", expanded=False):
+                        st.write(f"**Descripción:** {config['description'] or 'Sin descripción'}")
+                        st.write(f"**Grupos:** {config['num_grupos']} | **Maestros:** {config['num_maestros']} | **Salones:** {config['num_salones']}")
+                        st.write(f"**Creada:** {config['created_at'].strftime('%Y-%m-%d %H:%M')}")
+                        
+                        col_a, col_b = st.columns(2)
+                        
+                        with col_a:
+                            if st.button(f"📥 Cargar", key=f"load_{config['id']}"):
+                                try:
+                                    grupos_df, maestros_df, salones_df, name, desc = db.load_configuration(config['id'])
+                                    if grupos_df is not None:
+                                        st.session_state.grupos_df = grupos_df
+                                        st.session_state.maestros_df = maestros_df
+                                        st.session_state.salones_df = salones_df
+                                        st.success(f"✅ Plantilla '{name}' cargada correctamente")
+                                        st.rerun()
+                                    else:
+                                        st.error("No se pudo cargar la plantilla")
+                                except Exception as e:
+                                    st.error(f"Error al cargar: {str(e)}")
+                        
+                        with col_b:
+                            if st.button(f"🗑️ Eliminar", key=f"delete_config_{config['id']}"):
+                                try:
+                                    if db.delete_configuration(config['id']):
+                                        st.success("Plantilla eliminada")
+                                        st.rerun()
+                                except Exception as e:
+                                    st.error(f"Error al eliminar: {str(e)}")
+        
+        except Exception as e:
+            st.error(f"Error al cargar plantillas: {str(e)}")
+
 with tab2:
     st.header("Generar Horario")
     
@@ -569,12 +707,33 @@ with tab2:
         
         st.divider()
         
+        st.markdown("### 🎯 Selección de Algoritmo de Optimización")
+        st.info("Elige la estrategia de generación de horarios que mejor se adapte a tus necesidades.")
+        
+        algoritmos = {
+            'gap_minimization': '📉 Minimización de Huecos - Reduce tiempo muerto entre clases',
+            'earliest': '🌅 Horario Temprano - Prioriza las horas más tempranas del día',
+            'latest': '🌆 Horario Tardío - Prioriza las horas más tardías del día',
+            'balanced': '⚖️ Balanceado - Distribuye equitativamente durante la semana',
+            'compact': '📦 Compacto - Concentra clases en menos días'
+        }
+        
+        algoritmo_seleccionado = st.selectbox(
+            "Estrategia de Optimización",
+            options=list(algoritmos.keys()),
+            format_func=lambda x: algoritmos[x],
+            index=0
+        )
+        
+        st.divider()
+        
         if st.button("🤖 Generar Horario Automático", type="primary"):
-            with st.spinner("Generando horario optimizado con minimización de huecos..."):
+            with st.spinner(f"Generando horario con estrategia: {algoritmos[algoritmo_seleccionado]}..."):
                 st.session_state.horario_generado = generar_horario(
                     st.session_state.grupos_df,
                     st.session_state.maestros_df,
-                    st.session_state.salones_df
+                    st.session_state.salones_df,
+                    algoritmo=algoritmo_seleccionado
                 )
                 st.session_state.horario_editado = st.session_state.horario_generado.copy()
                 st.success(f"✅ Horario generado con {len(st.session_state.horario_generado)} clases programadas")
@@ -655,6 +814,178 @@ with tab3:
         with col4:
             horas_totales = (horario_actual['Hora_Fin'] - horario_actual['Hora_Inicio']).sum()
             st.metric("Horas Totales", f"{horas_totales:.1f}")
+        
+        st.divider()
+        
+        # Reportes estadísticos detallados
+        st.markdown("### 📊 Reportes Estadísticos Detallados")
+        
+        tab_stats1, tab_stats2, tab_stats3 = st.tabs(["🏫 Ocupación de Salones", "👨‍🏫 Carga de Maestros", "⏰ Análisis de Horarios"])
+        
+        with tab_stats1:
+            st.markdown("#### Análisis de Ocupación de Salones")
+            
+            # Calcular ocupación por salón
+            salon_stats = []
+            salones_en_horario = horario_actual['Salon'].unique()
+            
+            for salon in salones_en_horario:
+                clases_salon = horario_actual[horario_actual['Salon'] == salon]
+                horas_ocupadas = (clases_salon['Hora_Fin'] - clases_salon['Hora_Inicio']).sum()
+                num_clases = len(clases_salon)
+                
+                # Calcular horas disponibles por semana (5 días * 14 horas)
+                horas_disponibles = 5 * (HORA_FIN - HORA_INICIO)
+                tasa_ocupacion = (horas_ocupadas / horas_disponibles) * 100
+                
+                salon_stats.append({
+                    'Salón': salon,
+                    'Clases': num_clases,
+                    'Horas Ocupadas': f"{horas_ocupadas:.1f}",
+                    'Horas Disponibles': horas_disponibles,
+                    'Tasa de Ocupación (%)': f"{tasa_ocupacion:.1f}%"
+                })
+            
+            salon_df = pd.DataFrame(salon_stats)
+            st.dataframe(salon_df, use_container_width=True)
+            
+            # Gráfico de ocupación de salones
+            if len(salon_stats) > 0:
+                fig_salon = go.Figure(data=[
+                    go.Bar(
+                        x=[s['Salón'] for s in salon_stats],
+                        y=[float(s['Tasa de Ocupación (%)'].rstrip('%')) for s in salon_stats],
+                        marker_color='indianred'
+                    )
+                ])
+                fig_salon.update_layout(
+                    title="Tasa de Ocupación por Salón (%)",
+                    xaxis_title="Salón",
+                    yaxis_title="Ocupación (%)",
+                    height=400
+                )
+                st.plotly_chart(fig_salon, use_container_width=True)
+            
+            # Resumen
+            if len(salon_stats) > 0:
+                avg_ocupacion = sum([float(s['Tasa de Ocupación (%)'].rstrip('%')) for s in salon_stats]) / len(salon_stats)
+                st.info(f"📊 Tasa de ocupación promedio: {avg_ocupacion:.1f}%")
+        
+        with tab_stats2:
+            st.markdown("#### Análisis de Carga de Maestros")
+            
+            # Calcular carga por maestro
+            maestro_stats = []
+            maestros_en_horario = horario_actual['Maestro'].unique()
+            
+            for maestro in maestros_en_horario:
+                clases_maestro = horario_actual[horario_actual['Maestro'] == maestro]
+                horas_clase = (clases_maestro['Hora_Fin'] - clases_maestro['Hora_Inicio']).sum()
+                num_clases = len(clases_maestro)
+                num_grupos = clases_maestro['Grupo'].nunique()
+                
+                # Calcular distribución por día
+                dias_trabajo = clases_maestro['Dia'].nunique()
+                
+                maestro_stats.append({
+                    'Maestro': maestro,
+                    'Grupos': num_grupos,
+                    'Clases': num_clases,
+                    'Horas Semanales': f"{horas_clase:.1f}",
+                    'Días Activos': dias_trabajo
+                })
+            
+            maestro_df = pd.DataFrame(maestro_stats)
+            st.dataframe(maestro_df, use_container_width=True)
+            
+            # Gráfico de carga de maestros
+            if len(maestro_stats) > 0:
+                fig_maestro = go.Figure(data=[
+                    go.Bar(
+                        x=[m['Maestro'] for m in maestro_stats],
+                        y=[float(m['Horas Semanales']) for m in maestro_stats],
+                        marker_color='lightseagreen'
+                    )
+                ])
+                fig_maestro.update_layout(
+                    title="Horas de Clase por Maestro",
+                    xaxis_title="Maestro",
+                    yaxis_title="Horas Semanales",
+                    height=400
+                )
+                st.plotly_chart(fig_maestro, use_container_width=True)
+            
+            # Resumen
+            if len(maestro_stats) > 0:
+                total_horas = sum([float(m['Horas Semanales']) for m in maestro_stats])
+                avg_horas = total_horas / len(maestro_stats)
+                st.info(f"📊 Promedio de horas por maestro: {avg_horas:.1f} horas/semana")
+        
+        with tab_stats3:
+            st.markdown("#### Análisis de Distribución Horaria")
+            
+            # Calcular distribución por hora del día
+            hora_stats = {}
+            for hora in range(HORA_INICIO, HORA_FIN):
+                # Contar clases que ocupan esta hora
+                clases_en_hora = horario_actual[
+                    (horario_actual['Hora_Inicio'] <= hora) & 
+                    (horario_actual['Hora_Fin'] > hora)
+                ]
+                hora_stats[f"{hora}:00"] = len(clases_en_hora)
+            
+            # Crear gráfico de distribución por hora
+            fig_hora = go.Figure(data=[
+                go.Bar(
+                    x=list(hora_stats.keys()),
+                    y=list(hora_stats.values()),
+                    marker_color='mediumpurple'
+                )
+            ])
+            fig_hora.update_layout(
+                title="Distribución de Clases por Hora del Día",
+                xaxis_title="Hora",
+                yaxis_title="Número de Clases",
+                height=400
+            )
+            st.plotly_chart(fig_hora, use_container_width=True)
+            
+            # Distribución por día
+            dia_stats = horario_actual['Dia'].value_counts().to_dict()
+            dia_orden = {dia: dia_stats.get(dia, 0) for dia in DIAS}
+            
+            fig_dia = go.Figure(data=[
+                go.Bar(
+                    x=list(dia_orden.keys()),
+                    y=list(dia_orden.values()),
+                    marker_color='coral'
+                )
+            ])
+            fig_dia.update_layout(
+                title="Distribución de Clases por Día",
+                xaxis_title="Día",
+                yaxis_title="Número de Clases",
+                height=400
+            )
+            st.plotly_chart(fig_dia, use_container_width=True)
+            
+            # Análisis de huecos por grupo
+            st.markdown("#### Análisis de Huecos por Grupo")
+            huecos_grupo = []
+            for grupo in horario_actual['Grupo'].unique():
+                clases_grupo = horario_actual[horario_actual['Grupo'] == grupo].to_dict(orient='records')
+                huecos = calcular_huecos_grupo(clases_grupo)
+                huecos_grupo.append({
+                    'Grupo': grupo,
+                    'Horas de Hueco': f"{huecos:.1f}"
+                })
+            
+            huecos_df = pd.DataFrame(huecos_grupo)
+            st.dataframe(huecos_df, use_container_width=True)
+            
+            if len(huecos_grupo) > 0:
+                total_huecos = sum([float(h['Horas de Hueco']) for h in huecos_grupo])
+                st.info(f"📊 Total de horas de hueco: {total_huecos:.1f} horas")
 
 with tab4:
     st.header("Editar Horario Manualmente")
@@ -773,6 +1104,93 @@ with tab4:
             st.success("✅ No hay conflictos en el horario actual")
 
 with tab5:
+    st.header("💿 Horarios Guardados")
+    st.info("Guarda y recupera horarios generados para consultarlos más tarde.")
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        st.markdown("### 💾 Guardar Horario Actual")
+        
+        horario_para_guardar = st.session_state.horario_editado if st.session_state.horario_editado is not None else st.session_state.horario_generado
+        
+        if horario_para_guardar is None or len(horario_para_guardar) == 0:
+            st.warning("⚠️ No hay horario generado para guardar")
+        else:
+            with st.form("save_schedule_form"):
+                schedule_name = st.text_input("Nombre del Horario", placeholder="ej: Horario Otoño 2024")
+                schedule_description = st.text_area("Descripción (opcional)", placeholder="Notas sobre este horario...")
+                
+                submit_save_schedule = st.form_submit_button("💾 Guardar Horario", type="primary")
+                
+                if submit_save_schedule:
+                    if schedule_name:
+                        try:
+                            # Calcular estadísticas
+                            total_groups = int(horario_para_guardar['Grupo'].nunique())
+                            conflicts = detectar_conflictos(horario_para_guardar)
+                            total_conflicts = len(conflicts)
+                            
+                            schedule_id = db.save_schedule(
+                                schedule_name,
+                                schedule_description,
+                                horario_para_guardar,
+                                total_groups,
+                                total_conflicts
+                            )
+                            st.success(f"✅ Horario '{schedule_name}' guardado correctamente (ID: {schedule_id})")
+                            st.balloons()
+                        except Exception as e:
+                            st.error(f"❌ Error al guardar: {str(e)}")
+                    else:
+                        st.warning("Por favor ingresa un nombre para el horario")
+    
+    with col2:
+        st.markdown("### 📂 Cargar Horario Guardado")
+        
+        try:
+            schedules = db.list_schedules()
+            
+            if len(schedules) == 0:
+                st.info("No hay horarios guardados aún")
+            else:
+                st.markdown(f"**{len(schedules)} horarios disponibles:**")
+                
+                for schedule in schedules:
+                    with st.expander(f"📅 {schedule['name']}", expanded=False):
+                        st.write(f"**Descripción:** {schedule['description'] or 'Sin descripción'}")
+                        st.write(f"**Clases:** {schedule['total_classes']} | **Grupos:** {schedule['total_groups']} | **Conflictos:** {schedule['total_conflicts']}")
+                        st.write(f"**Creado:** {schedule['created_at'].strftime('%Y-%m-%d %H:%M')}")
+                        
+                        col_a, col_b = st.columns(2)
+                        
+                        with col_a:
+                            if st.button(f"📥 Cargar", key=f"load_sched_{schedule['id']}"):
+                                try:
+                                    schedule_df, name, desc = db.load_schedule(schedule['id'])
+                                    if schedule_df is not None:
+                                        st.session_state.horario_generado = schedule_df
+                                        st.session_state.horario_editado = schedule_df.copy()
+                                        st.success(f"✅ Horario '{name}' cargado correctamente")
+                                        st.rerun()
+                                    else:
+                                        st.error("No se pudo cargar el horario")
+                                except Exception as e:
+                                    st.error(f"Error al cargar: {str(e)}")
+                        
+                        with col_b:
+                            if st.button(f"🗑️ Eliminar", key=f"delete_sched_{schedule['id']}"):
+                                try:
+                                    if db.delete_schedule(schedule['id']):
+                                        st.success("Horario eliminado")
+                                        st.rerun()
+                                except Exception as e:
+                                    st.error(f"Error al eliminar: {str(e)}")
+        
+        except Exception as e:
+            st.error(f"Error al cargar horarios: {str(e)}")
+
+with tab6:
     st.header("Exportar Horario")
     
     horario_actual = st.session_state.horario_editado if st.session_state.horario_editado is not None else st.session_state.horario_generado
