@@ -13,7 +13,7 @@ from sqlalchemy.pool import NullPool
 import pandas as pd
 
 # Get database URL from environment
-DATABASE_URL = os.environ.get('DATABASE_URL')
+DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///./horario_comodo_bot.db')
 
 # Create engine with NullPool for Streamlit compatibility
 engine = create_engine(DATABASE_URL, poolclass=NullPool, echo=False)
