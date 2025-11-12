@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 import pandas as pd
 
-# Get database URL from environment
+# Cmabio en la obtencion de database to local environment variable
 DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///./horario_comodo_bot.db')
 
 # Create engine with NullPool for Streamlit compatibility

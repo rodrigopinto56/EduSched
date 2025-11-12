@@ -9,6 +9,9 @@ from reportlab.lib.styles import getSampleStyleSheet
 import plotly.graph_objects as go
 import db
 
+# Ejecucion local streamlit: streamlit run app.py
+#http://localhost:5000
+
 # Configuración de la página
 st.set_page_config(
     page_title="Generador de Horarios Académicos",
