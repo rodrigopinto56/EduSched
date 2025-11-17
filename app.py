@@ -50,14 +50,17 @@ st.markdown("### Sistema inteligente de generación de horarios con priorizació
 def crear_plantilla_grupos():
     """Crea un DataFrame de ejemplo para grupos"""
     data = {
-        'Grupo': ['Grupo A', 'Grupo B', 'Grupo C', 'Grupo D'],
-        'Materia': ['Matemáticas', 'Física', 'Programación', 'Química'],
-        'Semestre': [5, 3, 1, 7],
-        'Maestro': ['Dr. García', 'Dra. López', 'Ing. Martínez', 'Dr. García'],
-        'Duracion_Horas': [2, 1.5, 2, 1.5],
-        'Sesiones_Semanales': [3, 2, 3, 2],
-        'Num_Estudiantes': [30, 25, 35, 28]
+        'Carrera': ['Sistemas', 'Sistemas', 'Derecho', 'Administración'],
+        'Grupo': ['IS-501', 'IS-503', 'DER-301', 'ADM-701'],
+        'Materia': ['Bases de Datos', 'Redes', 'Derecho Civil', 'Finanzas'],
+        'Semestre': [5, 5, 3, 7],
+        'Maestro': ['Dr. García', 'Dra. López', 'Ing. Martínez', 'Dra. López'],
+        'Duracion_Horas': [2, 2, 1.5, 2],
+        'Sesiones_Semanales': [2, 2, 3, 2],
+        'Num_Estudiantes': [35, 40, 30, 25],
+        'Tipo_Salon_Requerido': ['Aula', 'Laboratorio', 'Aula', 'Aula']
     }
+
     return pd.DataFrame(data)
 
 def crear_plantilla_maestros():
@@ -223,11 +226,21 @@ def generar_horario(grupos_df, maestros_df, salones_df, algoritmo='gap_minimizat
         
         # Buscar salón adecuado
         salon_asignado = None
+        tipo_req = grupo.get('Tipo_Salon_Requerido', None)
         for salon in salones_lista:
             salon_info = salones_df[salones_df['Salon'] == salon].iloc[0]
-            if salon_info['Capacidad'] >= num_estudiantes:
-                salon_asignado = salon
-                break
+
+            # Checar capacidad
+            if salon_info['Capacidad'] < num_estudiantes:
+                continue
+            
+            # Si el grupo pide tipo específico, filtrar por tipo
+            if tipo_req is not None and tipo_req != '' and salon_info.get('Tipo', None) != tipo_req:
+                continue
+            
+            salon_asignado = salon
+            break
+        
         
         if salon_asignado is None:
             st.warning(f"No se encontró salón con capacidad para {grupo_nombre}")
@@ -241,7 +254,7 @@ def generar_horario(grupos_df, maestros_df, salones_df, algoritmo='gap_minimizat
         
         for dia in DIAS:
             # Obtener disponibilidad del maestro para ese día
-            dia_col = 'Miercoles' if dia == 'Miércoles' else dia
+            dia_col = 'Miercoles' if dia == 'Miércoles' else diaP
             disponibilidad = parsear_horario(maestro_info[dia_col])
             
             # Generar franjas posibles
