@@ -43,7 +43,7 @@ except Exception as e:
     st.error(f"Error al inicializar la base de datos: {str(e)}")
 
 # Título principal
-st.title("📅 Generador de Horarios Académicos")
+st.title("Generador de Horarios Académicos")
 st.markdown("### Sistema inteligente de generación de horarios con priorización por semestre")
 
 # Función para crear plantilla de ejemplo
@@ -254,7 +254,7 @@ def generar_horario(grupos_df, maestros_df, salones_df, algoritmo='gap_minimizat
         
         for dia in DIAS:
             # Obtener disponibilidad del maestro para ese día
-            dia_col = 'Miercoles' if dia == 'Miércoles' else diaP
+            dia_col = 'Miercoles' if dia == 'Miércoles' else dia
             disponibilidad = parsear_horario(maestro_info[dia_col])
             
             # Generar franjas posibles
@@ -306,7 +306,7 @@ def generar_horario(grupos_df, maestros_df, salones_df, algoritmo='gap_minimizat
             
             # Verificar nuevamente conflictos (por si acaso)
             if not verificar_conflicto(horario, clase['Dia'], clase['Hora_Inicio'], 
-                                      clase['Hora_Fin'], maestro, salon_asignado):
+                clase['Hora_Fin'], maestro, salon_asignado):
                 horario.append(clase)
                 sesiones_asignadas += 1
                 dias_usados.add(clase['Dia'])
@@ -424,9 +424,9 @@ def visualizar_horario_lista(horario_df, filtro_grupo=None, filtro_maestro=None,
                 with col3:
                     st.write(f"👥 {clase['Grupo']}")
                 with col4:
-                    st.write(f"👨‍🏫 {clase['Maestro']}")
+                    st.write(f"{clase['Maestro']}")
                 with col5:
-                    st.write(f"🏫 {clase['Salon']}")
+                    st.write(f"{clase['Salon']}")
         else:
             st.write("Sin clases programadas")
         
@@ -531,13 +531,13 @@ def exportar_pdf(horario_df):
 
 # Interfaz principal
 tab1, tab1b, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    "📥 Cargar Datos", 
-    "💾 Plantillas",
-    "🤖 Generar Horario", 
-    "📊 Ver Horario", 
-    "✏️ Editar Horario",
-    "💿 Horarios Guardados",
-    "📤 Exportar"
+    "Cargar Datos", 
+    "Plantillas",
+    "Generar Horario", 
+    "Ver Horario", 
+    "Editar Horario",
+    "Horarios Guardados",
+    "Exportar"
 ])
 
 with tab1:
@@ -550,7 +550,7 @@ with tab1:
         plantilla_grupos = crear_plantilla_grupos()
         csv_grupos = plantilla_grupos.to_csv(index=False).encode('utf-8')
         st.download_button(
-            label="📥 Descargar Plantilla Grupos",
+            label="Descargar Plantilla Grupos",
             data=csv_grupos,
             file_name="plantilla_grupos.csv",
             mime="text/csv"
@@ -560,7 +560,7 @@ with tab1:
         plantilla_maestros = crear_plantilla_maestros()
         csv_maestros = plantilla_maestros.to_csv(index=False).encode('utf-8')
         st.download_button(
-            label="📥 Descargar Plantilla Maestros",
+            label="Descargar Plantilla Maestros",
             data=csv_maestros,
             file_name="plantilla_maestros.csv",
             mime="text/csv"
@@ -570,7 +570,7 @@ with tab1:
         plantilla_salones = crear_plantilla_salones()
         csv_salones = plantilla_salones.to_csv(index=False).encode('utf-8')
         st.download_button(
-            label="📥 Descargar Plantilla Salones",
+            label="Descargar Plantilla Salones",
             data=csv_salones,
             file_name="plantilla_salones.csv",
             mime="text/csv"
@@ -587,7 +587,7 @@ with tab1:
         archivo_grupos = st.file_uploader("Subir archivo de grupos", type=['csv'], key='grupos')
         if archivo_grupos:
             st.session_state.grupos_df = pd.read_csv(archivo_grupos)
-            st.success(f"✅ {len(st.session_state.grupos_df)} grupos cargados")
+            st.success(f"{len(st.session_state.grupos_df)} grupos cargados")
             st.dataframe(st.session_state.grupos_df)
     
     with col2:
@@ -595,7 +595,7 @@ with tab1:
         archivo_maestros = st.file_uploader("Subir archivo de maestros", type=['csv'], key='maestros')
         if archivo_maestros:
             st.session_state.maestros_df = pd.read_csv(archivo_maestros)
-            st.success(f"✅ {len(st.session_state.maestros_df)} maestros cargados")
+            st.success(f"{len(st.session_state.maestros_df)} maestros cargados")
             st.dataframe(st.session_state.maestros_df)
     
     with col3:
@@ -603,35 +603,35 @@ with tab1:
         archivo_salones = st.file_uploader("Subir archivo de salones", type=['csv'], key='salones')
         if archivo_salones:
             st.session_state.salones_df = pd.read_csv(archivo_salones)
-            st.success(f"✅ {len(st.session_state.salones_df)} salones cargados")
+            st.success(f"{len(st.session_state.salones_df)} salones cargados")
             st.dataframe(st.session_state.salones_df)
     
     st.divider()
     
-    if st.button("🧪 Usar Datos de Ejemplo"):
+    if st.button("Usar Datos de Ejemplo"):
         st.session_state.grupos_df = crear_plantilla_grupos()
         st.session_state.maestros_df = crear_plantilla_maestros()
         st.session_state.salones_df = crear_plantilla_salones()
-        st.success("✅ Datos de ejemplo cargados correctamente")
+        st.success("Datos de ejemplo cargados correctamente")
         st.rerun()
 
 with tab1b:
-    st.header("💾 Gestión de Plantillas")
+    st.header("Gestión de Plantillas")
     st.info("Guarda y reutiliza configuraciones de grupos, maestros y salones para semestres futuros.")
     
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        st.markdown("### 💾 Guardar Configuración Actual")
+        st.markdown("### Guardar Configuración Actual")
         
         if st.session_state.grupos_df is None or st.session_state.maestros_df is None or st.session_state.salones_df is None:
-            st.warning("⚠️ Carga primero los datos en la pestaña 'Cargar Datos'")
+            st.warning("Carga primero los datos en la pestaña 'Cargar Datos'")
         else:
             with st.form("save_config_form"):
                 config_name = st.text_input("Nombre de la Plantilla", placeholder="ej: Semestre Otoño 2024")
                 config_description = st.text_area("Descripción (opcional)", placeholder="Describe esta configuración...")
                 
-                submit_save = st.form_submit_button("💾 Guardar Plantilla", type="primary")
+                submit_save = st.form_submit_button("Guardar Plantilla", type="primary")
                 
                 if submit_save:
                     if config_name:
@@ -643,15 +643,15 @@ with tab1b:
                                 st.session_state.maestros_df,
                                 st.session_state.salones_df
                             )
-                            st.success(f"✅ Plantilla '{config_name}' guardada correctamente (ID: {config_id})")
+                            st.success(f"Plantilla '{config_name}' guardada correctamente (ID: {config_id})")
                             st.balloons()
                         except Exception as e:
-                            st.error(f"❌ Error al guardar: {str(e)}")
+                            st.error(f"Error al guardar: {str(e)}")
                     else:
                         st.warning("Por favor ingresa un nombre para la plantilla")
     
     with col2:
-        st.markdown("### 📂 Cargar Plantilla Guardada")
+        st.markdown("### Cargar Plantilla Guardada")
         
         try:
             configs = db.list_configurations()
@@ -662,7 +662,7 @@ with tab1b:
                 st.markdown(f"**{len(configs)} plantillas disponibles:**")
                 
                 for config in configs:
-                    with st.expander(f"📋 {config['name']}", expanded=False):
+                    with st.expander(f"{config['name']}", expanded=False):
                         st.write(f"**Descripción:** {config['description'] or 'Sin descripción'}")
                         st.write(f"**Grupos:** {config['num_grupos']} | **Maestros:** {config['num_maestros']} | **Salones:** {config['num_salones']}")
                         st.write(f"**Creada:** {config['created_at'].strftime('%Y-%m-%d %H:%M')}")
@@ -670,14 +670,14 @@ with tab1b:
                         col_a, col_b = st.columns(2)
                         
                         with col_a:
-                            if st.button(f"📥 Cargar", key=f"load_{config['id']}"):
+                            if st.button(f"Cargar", key=f"load_{config['id']}"):
                                 try:
                                     grupos_df, maestros_df, salones_df, name, desc = db.load_configuration(config['id'])
                                     if grupos_df is not None:
                                         st.session_state.grupos_df = grupos_df
                                         st.session_state.maestros_df = maestros_df
                                         st.session_state.salones_df = salones_df
-                                        st.success(f"✅ Plantilla '{name}' cargada correctamente")
+                                        st.success(f"Plantilla '{name}' cargada correctamente")
                                         st.rerun()
                                     else:
                                         st.error("No se pudo cargar la plantilla")
@@ -685,7 +685,7 @@ with tab1b:
                                     st.error(f"Error al cargar: {str(e)}")
                         
                         with col_b:
-                            if st.button(f"🗑️ Eliminar", key=f"delete_config_{config['id']}"):
+                            if st.button(f"Eliminar", key=f"delete_config_{config['id']}"):
                                 try:
                                     if db.delete_configuration(config['id']):
                                         st.success("Plantilla eliminada")
@@ -700,9 +700,9 @@ with tab2:
     st.header("Generar Horario")
     
     if st.session_state.grupos_df is None or st.session_state.maestros_df is None or st.session_state.salones_df is None:
-        st.warning("⚠️ Por favor, carga primero los datos de grupos, maestros y salones en la pestaña 'Cargar Datos'")
+        st.warning("Por favor, carga primero los datos de grupos, maestros y salones en la pestaña 'Cargar Datos'")
     else:
-        st.success("✅ Todos los datos necesarios están cargados")
+        st.success("Todos los datos necesarios están cargados")
         
         st.markdown("### Información Cargada")
         col1, col2, col3 = st.columns(3)
@@ -723,15 +723,15 @@ with tab2:
         
         st.divider()
         
-        st.markdown("### 🎯 Selección de Algoritmo de Optimización")
+        st.markdown("### Selección de Algoritmo de Optimización")
         st.info("Elige la estrategia de generación de horarios que mejor se adapte a tus necesidades.")
         
         algoritmos = {
-            'gap_minimization': '📉 Minimización de Huecos - Reduce tiempo muerto entre clases',
-            'earliest': '🌅 Horario Temprano - Prioriza las horas más tempranas del día',
-            'latest': '🌆 Horario Tardío - Prioriza las horas más tardías del día',
-            'balanced': '⚖️ Balanceado - Distribuye equitativamente durante la semana',
-            'compact': '📦 Compacto - Concentra clases en menos días'
+            'gap_minimization': 'Minimización de Huecos - Reduce tiempo muerto entre clases',
+            'earliest': 'Horario Temprano - Prioriza las horas más tempranas del día',
+            'latest': 'Horario Tardío - Prioriza las horas más tardías del día',
+            'balanced': 'Balanceado - Distribuye equitativamente durante la semana',
+            'compact': 'Compacto - Concentra clases en menos días'
         }
         
         algoritmo_seleccionado = st.selectbox(
@@ -743,7 +743,7 @@ with tab2:
         
         st.divider()
         
-        if st.button("🤖 Generar Horario Automático", type="primary"):
+        if st.button("Generar Horario Automático", type="primary"):
             with st.spinner(f"Generando horario con estrategia: {algoritmos[algoritmo_seleccionado]}..."):
                 st.session_state.horario_generado = generar_horario(
                     st.session_state.grupos_df,
@@ -752,7 +752,7 @@ with tab2:
                     algoritmo=algoritmo_seleccionado
                 )
                 st.session_state.horario_editado = st.session_state.horario_generado.copy()
-                st.success(f"✅ Horario generado con {len(st.session_state.horario_generado)} clases programadas")
+                st.success(f"Horario generado con {len(st.session_state.horario_generado)} clases programadas")
                 
                 # Calcular huecos totales
                 huecos_totales = 0
@@ -761,15 +761,15 @@ with tab2:
                     clases_grupo = clases_grupo_df.to_dict(orient='records')
                     huecos_totales += calcular_huecos_grupo(clases_grupo)
                 
-                st.info(f"📊 Total de horas de hueco en todos los grupos: {huecos_totales:.1f} horas")
+                st.info(f"Total de horas de hueco en todos los grupos: {huecos_totales:.1f} horas")
                 
                 # Detectar conflictos
                 conflictos = detectar_conflictos(st.session_state.horario_generado)
                 if len(conflictos) > 0:
-                    st.warning(f"⚠️ Se detectaron {len(conflictos)} conflictos")
+                    st.warning(f"Se detectaron {len(conflictos)} conflictos")
                     st.dataframe(pd.DataFrame(conflictos))
                 else:
-                    st.success("✅ No se detectaron conflictos en el horario")
+                    st.success("No se detectaron conflictos en el horario")
                 
                 st.balloons()
 
@@ -779,9 +779,9 @@ with tab3:
     horario_actual = st.session_state.horario_editado if st.session_state.horario_editado is not None else st.session_state.horario_generado
     
     if horario_actual is None or len(horario_actual) == 0:
-        st.info("ℹ️ No hay horario generado. Ve a la pestaña 'Generar Horario' para crear uno.")
+        st.info("ℹNo hay horario generado. Ve a la pestaña 'Generar Horario' para crear uno.")
     else:
-        st.success(f"✅ Mostrando horario con {len(horario_actual)} clases")
+        st.success(f"Mostrando horario con {len(horario_actual)} clases")
         
         # Filtros
         col1, col2, col3 = st.columns(3)
@@ -801,19 +801,19 @@ with tab3:
         st.divider()
         
         # Visualización de cuadrícula
-        st.markdown("### 📊 Cuadrícula Semanal")
+        st.markdown("### Cuadrícula Semanal")
         crear_cuadricula_horario(horario_actual, filtro_grupo, filtro_maestro, filtro_salon)
         
         st.divider()
         
         # Visualización de lista
-        st.markdown("### 📋 Vista Detallada por Día")
+        st.markdown("### Vista Detallada por Día")
         visualizar_horario_lista(horario_actual, filtro_grupo, filtro_maestro, filtro_salon)
         
         st.divider()
         
         # Estadísticas
-        st.markdown("### 📈 Estadísticas")
+        st.markdown("### Estadísticas")
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -834,9 +834,9 @@ with tab3:
         st.divider()
         
         # Reportes estadísticos detallados
-        st.markdown("### 📊 Reportes Estadísticos Detallados")
+        st.markdown("### Reportes Estadísticos Detallados")
         
-        tab_stats1, tab_stats2, tab_stats3 = st.tabs(["🏫 Ocupación de Salones", "👨‍🏫 Carga de Maestros", "⏰ Análisis de Horarios"])
+        tab_stats1, tab_stats2, tab_stats3 = st.tabs(["Ocupación de Salones", "Carga de Maestros", "Análisis de Horarios"])
         
         with tab_stats1:
             st.markdown("#### Análisis de Ocupación de Salones")
@@ -885,7 +885,7 @@ with tab3:
             # Resumen
             if len(salon_stats) > 0:
                 avg_ocupacion = sum([float(s['Tasa de Ocupación (%)'].rstrip('%')) for s in salon_stats]) / len(salon_stats)
-                st.info(f"📊 Tasa de ocupación promedio: {avg_ocupacion:.1f}%")
+                st.info(f"Tasa de ocupación promedio: {avg_ocupacion:.1f}%")
         
         with tab_stats2:
             st.markdown("#### Análisis de Carga de Maestros")
@@ -935,7 +935,7 @@ with tab3:
             if len(maestro_stats) > 0:
                 total_horas = sum([float(m['Horas Semanales']) for m in maestro_stats])
                 avg_horas = total_horas / len(maestro_stats)
-                st.info(f"📊 Promedio de horas por maestro: {avg_horas:.1f} horas/semana")
+                st.info(f"Promedio de horas por maestro: {avg_horas:.1f} horas/semana")
         
         with tab_stats3:
             st.markdown("#### Análisis de Distribución Horaria")
@@ -1001,7 +1001,7 @@ with tab3:
             
             if len(huecos_grupo) > 0:
                 total_huecos = sum([float(h['Horas de Hueco']) for h in huecos_grupo])
-                st.info(f"📊 Total de horas de hueco: {total_huecos:.1f} horas")
+                st.info(f"Total de horas de hueco: {total_huecos:.1f} horas")
 
 with tab4:
     st.header("Editar Horario Manualmente")
@@ -1009,9 +1009,9 @@ with tab4:
     horario_actual = st.session_state.horario_editado if st.session_state.horario_editado is not None else st.session_state.horario_generado
     
     if horario_actual is None or len(horario_actual) == 0:
-        st.info("ℹ️ No hay horario para editar. Genera un horario primero.")
+        st.info("ℹNo hay horario para editar. Genera un horario primero.")
     else:
-        st.markdown("### 🛠️ Editor de Horario")
+        st.markdown("### Editor de Horario")
         st.info("Edita las clases directamente en la tabla. Los cambios se validarán automáticamente para detectar conflictos.")
         
         # Crear tabla editable
@@ -1052,7 +1052,7 @@ with tab4:
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("💾 Guardar Cambios", type="primary"):
+            if st.button("Guardar Cambios", type="primary"):
                 try:
                     # Convertir de vuelta a formato original
                     df_nuevo = edited_df.copy()
@@ -1086,23 +1086,23 @@ with tab4:
                     conflictos = detectar_conflictos(df_nuevo)
                     
                     if len(conflictos) > 0:
-                        st.warning(f"⚠️ Se detectaron {len(conflictos)} conflictos en el horario editado:")
+                        st.warning(f"Se detectaron {len(conflictos)} conflictos en el horario editado:")
                         st.dataframe(pd.DataFrame(conflictos))
                         st.info("Puedes guardar de todos modos, pero se recomienda resolver los conflictos.")
                     
                     # Guardar
                     st.session_state.horario_editado = df_nuevo
-                    st.success("✅ Cambios guardados correctamente")
+                    st.success("Cambios guardados correctamente")
                     st.rerun()
                     
                 except Exception as e:
-                    st.error(f"❌ Error al guardar cambios: {str(e)}")
+                    st.error(f"Error al guardar cambios: {str(e)}")
         
         with col2:
-            if st.button("🔄 Restaurar Horario Original"):
+            if st.button("Restaurar Horario Original"):
                 if st.session_state.horario_generado is not None:
                     st.session_state.horario_editado = st.session_state.horario_generado.copy()
-                    st.success("✅ Horario restaurado al original generado")
+                    st.success("Horario restaurado al original generado")
                     st.rerun()
                 else:
                     st.error("No hay horario original para restaurar")
@@ -1110,34 +1110,34 @@ with tab4:
         st.divider()
         
         # Mostrar conflictos actuales
-        st.markdown("### 🔍 Detección de Conflictos")
+        st.markdown("### Detección de Conflictos")
         conflictos_actuales = detectar_conflictos(horario_actual)
         
         if len(conflictos_actuales) > 0:
-            st.warning(f"⚠️ {len(conflictos_actuales)} conflictos detectados:")
+            st.warning(f"{len(conflictos_actuales)} conflictos detectados:")
             st.dataframe(pd.DataFrame(conflictos_actuales), use_container_width=True)
         else:
-            st.success("✅ No hay conflictos en el horario actual")
+            st.success("No hay conflictos en el horario actual")
 
 with tab5:
-    st.header("💿 Horarios Guardados")
+    st.header("Horarios Guardados")
     st.info("Guarda y recupera horarios generados para consultarlos más tarde.")
     
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        st.markdown("### 💾 Guardar Horario Actual")
+        st.markdown("### Guardar Horario Actual")
         
         horario_para_guardar = st.session_state.horario_editado if st.session_state.horario_editado is not None else st.session_state.horario_generado
         
         if horario_para_guardar is None or len(horario_para_guardar) == 0:
-            st.warning("⚠️ No hay horario generado para guardar")
+            st.warning("No hay horario generado para guardar")
         else:
             with st.form("save_schedule_form"):
                 schedule_name = st.text_input("Nombre del Horario", placeholder="ej: Horario Otoño 2024")
                 schedule_description = st.text_area("Descripción (opcional)", placeholder="Notas sobre este horario...")
                 
-                submit_save_schedule = st.form_submit_button("💾 Guardar Horario", type="primary")
+                submit_save_schedule = st.form_submit_button("Guardar Horario", type="primary")
                 
                 if submit_save_schedule:
                     if schedule_name:
@@ -1154,15 +1154,15 @@ with tab5:
                                 total_groups,
                                 total_conflicts
                             )
-                            st.success(f"✅ Horario '{schedule_name}' guardado correctamente (ID: {schedule_id})")
+                            st.success(f"Horario '{schedule_name}' guardado correctamente (ID: {schedule_id})")
                             st.balloons()
                         except Exception as e:
-                            st.error(f"❌ Error al guardar: {str(e)}")
+                            st.error(f"Error al guardar: {str(e)}")
                     else:
                         st.warning("Por favor ingresa un nombre para el horario")
     
     with col2:
-        st.markdown("### 📂 Cargar Horario Guardado")
+        st.markdown("### Cargar Horario Guardado")
         
         try:
             schedules = db.list_schedules()
@@ -1173,7 +1173,7 @@ with tab5:
                 st.markdown(f"**{len(schedules)} horarios disponibles:**")
                 
                 for schedule in schedules:
-                    with st.expander(f"📅 {schedule['name']}", expanded=False):
+                    with st.expander(f"{schedule['name']}", expanded=False):
                         st.write(f"**Descripción:** {schedule['description'] or 'Sin descripción'}")
                         st.write(f"**Clases:** {schedule['total_classes']} | **Grupos:** {schedule['total_groups']} | **Conflictos:** {schedule['total_conflicts']}")
                         st.write(f"**Creado:** {schedule['created_at'].strftime('%Y-%m-%d %H:%M')}")
@@ -1181,13 +1181,13 @@ with tab5:
                         col_a, col_b = st.columns(2)
                         
                         with col_a:
-                            if st.button(f"📥 Cargar", key=f"load_sched_{schedule['id']}"):
+                            if st.button(f"Cargar", key=f"load_sched_{schedule['id']}"):
                                 try:
                                     schedule_df, name, desc = db.load_schedule(schedule['id'])
                                     if schedule_df is not None:
                                         st.session_state.horario_generado = schedule_df
                                         st.session_state.horario_editado = schedule_df.copy()
-                                        st.success(f"✅ Horario '{name}' cargado correctamente")
+                                        st.success(f"Horario '{name}' cargado correctamente")
                                         st.rerun()
                                     else:
                                         st.error("No se pudo cargar el horario")
@@ -1195,7 +1195,7 @@ with tab5:
                                     st.error(f"Error al cargar: {str(e)}")
                         
                         with col_b:
-                            if st.button(f"🗑️ Eliminar", key=f"delete_sched_{schedule['id']}"):
+                            if st.button(f"Eliminar", key=f"delete_sched_{schedule['id']}"):
                                 try:
                                     if db.delete_schedule(schedule['id']):
                                         st.success("Horario eliminado")
@@ -1212,17 +1212,17 @@ with tab6:
     horario_actual = st.session_state.horario_editado if st.session_state.horario_editado is not None else st.session_state.horario_generado
     
     if horario_actual is None or len(horario_actual) == 0:
-        st.info("ℹ️ No hay horario para exportar. Genera un horario primero.")
+        st.info("ℹNo hay horario para exportar. Genera un horario primero.")
     else:
-        st.success("✅ Horario listo para exportar")
+        st.success("Horario listo para exportar")
         
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("### 📄 Exportar a CSV")
+            st.markdown("### Exportar a CSV")
             csv_export = horario_actual.to_csv(index=False).encode('utf-8')
             st.download_button(
-                label="📥 Descargar CSV",
+                label="Descargar CSV",
                 data=csv_export,
                 file_name=f"horario_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
                 mime="text/csv",
@@ -1230,10 +1230,10 @@ with tab6:
             )
         
         with col2:
-            st.markdown("### 📄 Exportar a PDF")
+            st.markdown("### Exportar a PDF")
             pdf_buffer = exportar_pdf(horario_actual)
             st.download_button(
-                label="📥 Descargar PDF",
+                label="Descargar PDF",
                 data=pdf_buffer,
                 file_name=f"horario_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
                 mime="application/pdf",
