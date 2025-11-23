@@ -23,7 +23,7 @@ resource "aws_security_group" "bot_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["IP_PUBLICA/32"]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   #streamlit abierto para pruebas
@@ -44,9 +44,9 @@ resource "aws_security_group" "bot_sg" {
 }
 
 resource "aws_instance" "bot_horarios" {
-  ami                    = "ami-000722651477bd39b"
-  instance_type          = "t2.micro"
-  key_name               = "keyName" #Aun no tengo la key name modificar: pendiente ❓❓
+  ami                    = "ami-0fa3fe0fa7920f68e"
+  instance_type          = "t3.micro"
+  key_name               = "EduSched" #Aun no tengo la key name modificar: pendiente ❓❓
   vpc_security_group_ids = [aws_security_group.bot_sg.id]
 
   root_block_device {
