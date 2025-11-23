@@ -1,0 +1,53 @@
+# Entorno virtual
+venv/
+.env/
+.venv/
+
+# Archivos de base de datos
+*.db
+*.sqlite3
+
+# Archivos y carpetas locales de Streamlit
+.streamlit/
+.local/
+
+# Archivos generados por Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de lock o dependencias específicas del sistema
+uv.lock
+poetry.lock
+pip-wheel-metadata/
+*.egg-info/
+*.egg
+
+# Archivos de logs
+*.log
+
+# Archivos temporales o de cache
+*.cache
+.cache/
+.ipynb_checkpoints/
+tmp/
+temp/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Configuraciones de desarrollo
+.replit/
+.vscode/
+.idea/
+
+# Exportaciones
+*.pdf
+*.csv
+*.xlsx
+
+# Build o empaquetado
+dist/
+build/
