@@ -1,0 +1,42 @@
+---
+- name: Desplegar bot de horarios en EC2
+  hosts: bot_horarios
+  become: yes
+
+  vars:
+    repo_url: "https://github.com/rodrigopinto56/EduSched.git"  
+    app_base_dir: "/opt/horario-bot"
+    repo_dir: "{{ app_base_dir }}/repo"
+
+   
+    project_subdir: ""
+
+    venv_dir: "{{ app_base_dir }}/venv"
+
+  tasks:
+    - name: Crear carpeta base para la app
+      ansible.builtin.file:
+        path: "{{ app_base_dir }}"
+        state: directory
+        owner: ec2-user
+        group: ec2-user
+        mode: "0755"
+
+    - name: Clonar o actualizar repo del bot
+      ansible.builtin.git:
+        repo: "{{ repo_url }}"
+        dest: "{{ repo_dir }}"
+        version: updates        # Rama Especifica del repo
+        update: yes
+      become_user: ec2-user
+
+    - name: Crear entorno virtual de Python si no existe
+      ansible.builtin.command: python3 -m venv "{{ venv_dir }}"
+      args:
+        creates: "{{ venv_dir }}/bin/activate"
+
+    - name: Instalar dependencias desde requirements.txt
+      ansible.builtin.pip:
+        requirements: "{{ repo_dir }}/requirements.txt"
+        virtualenv: "{{ venv_dir }}"
+        virtualenv_site_packages: no

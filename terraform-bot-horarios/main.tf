@@ -46,7 +46,7 @@ resource "aws_security_group" "bot_sg" {
 resource "aws_instance" "bot_horarios" {
   ami                    = "ami-0fa3fe0fa7920f68e"
   instance_type          = "t3.micro"
-  key_name               = "EduSched" #Aun no tengo la key name modificar: pendiente ❓❓
+  key_name               = "EduSched" 
   vpc_security_group_ids = [aws_security_group.bot_sg.id]
 
   root_block_device {
