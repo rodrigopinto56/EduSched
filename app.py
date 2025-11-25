@@ -48,40 +48,157 @@ st.markdown("### Sistema inteligente de generación de horarios con priorizació
 
 # Función para crear plantilla de ejemplo
 def crear_plantilla_grupos():
-    """Crea un DataFrame de ejemplo para grupos"""
+    """Crea un DataFrame de ejemplo para 40 grupos usando máximo 25 maestros."""
+
+    # Lista de grupos (más de 40, luego recortamos)
+    grupos = [
+        "LSMR-401","LSMT-401","LSLN-501","LSDG-801","LSFZ-201",
+        "LSDR-401","LSAN-401","LSRH-101","LSHP-301","LSCO-201",
+        "LSCO-101","LSMD-401","LSMR-501","LSMR-301","LSEM-301",
+        "LSDR-501","LSGE-501","LSMR-601","LSDL-101","LSEM-101",
+        "LSGE-201","LSGE-101","LSNI-201","LSRH-401","LSDG-701",
+        "LSDG-801","LSDG-301","LSDG-201","LSDG-401","LSDG-101",
+        "LSDG-601","LSDG-501","LSHP-201","LSDR-301","LSNI-301",
+        "LSNI-101","LSNI-401","LSPT-401","LSPT-201","LSPT-101"
+    ]
+
+    materias = [
+        "Actuadores eléctricos","Administración de cuentas clave","Administración de operaciones logísticas","Administración del diseño","Administración financiera",
+        "Administración y organización de eventos","Análisis de estados financieros","Análisis de estrategias de negocios","Análisis múltiple de contribuciones","Analítica digital",
+        "Animación digital para videojuegos","Animación tridimensional por computadora","Campañas de publicidad pagadas","Canales de distribución","Comercio electrónico",
+        "Comportamiento organizacional","Computación en Java","Comunicación deportiva","Comunicación y medios","Comunicación y sociedad",
+        "Comunicación y tecnología","Comunicación y tendencias","Comunicación y visualidad","Conteo y estadística","Cultura deportiva",
+        "Desarrollo de marcas","Desarrollo de nuevos productos","Desarrollo de proyectos de investigación de mercados","Diseño de experiencias de servicio","Distribución física internacional",
+        "Estrategias de comercialización internacional","Estrategias de mercadotecnia digital","Estrategias de producto y precio","Estrategias de promoción","Gestión de canales de distribución",
+        "Gestión de la innovación en mercadotecnia","Gestión de marca personal","Gestión de proyectos de mercadotecnia","Investigación de mercados","Logística internacional"
+    ]
+
+    semestres = [
+        4,4,5,8,2,
+        4,4,1,3,2,
+        1,4,5,3,3,
+        5,5,6,1,1,
+        2,1,2,4,7,
+        8,3,2,4,1,
+        6,5,2,3,3
+    ]
+
+    num_estudiantes = [
+        34,25,30,36,36,
+        39,27,35,26,33,
+        34,27,36,33,31,
+        31,33,37,38,34,
+        26,30,31,32,25,
+        35,32,33,34,35,
+        36,37,38,39
+    ]
+
+    tipo_salon = [
+        "Aula","Aula","Aula","Laboratorio","Aula",
+        "Aula","Aula","Aula","Aula","Aula",
+        "Aula","Aula","Aula","Aula","Aula",
+        "Aula","Aula","Aula","Aula","Aula",
+        "Aula","Aula","Aula","Aula","Aula",
+        "Aula","Aula","Aula","Aula","Aula",
+        "Aula","Aula","Aula","Aula","Aula",
+        "Aula","Aula","Aula","Aula"
+    ]
+
+    # Queremos exactamente 40 grupos
+    n = 40
+
+    # Función auxiliar: recorta o rellena repitiendo el último valor
+    def pad_to(lst, n):
+        if len(lst) >= n:
+            return lst[:n]
+        return lst + [lst[-1]] * (n - len(lst))
+
+    grupos = pad_to(grupos, n)
+    materias = pad_to(materias, n)
+    semestres = pad_to(semestres, n)
+    num_estudiantes = pad_to(num_estudiantes, n)
+    tipo_salon = pad_to(tipo_salon, n)
+
+    # Máximo 25 docentes distintos
+    maestros_base = [
+        "Alejandro Carrillo", "Andres Cortinas", "Magaly Parra", "Claudia Grado",
+        "Jose Manuel Gutierrez Salinas", "Patricia Holguin", "Ruben Enrique Soto Moguel",
+        "Jose Rodriguez", "Luz Elena Cano", "Paola Sanchez",
+        "Alfredo Gomez", "Gerardo Salas", "Karina Villalobos", "Abraham Tellez",
+        "Cesar Lozano", "Rodolfo Morales", "Guillermo Arellano", "Daniel Gutierrez",
+        "Rita Gutierrez", "Javier Reyes",
+        "Alejandra Quintana", "Ana Laura Rojas", "Marco Antonio Escobedo",
+        "Esteban Flores", "Carlos Martinez"
+    ]
+
+    maestros_asignados = [
+        maestros_base[i % len(maestros_base)] for i in range(n)
+    ]
+
     data = {
-        'Carrera': ['Sistemas', 'Sistemas', 'Derecho', 'Administración'],
-        'Grupo': ['IS-501', 'IS-503', 'DER-301', 'ADM-701'],
-        'Materia': ['Bases de Datos', 'Redes', 'Derecho Civil', 'Finanzas'],
-        'Semestre': [5, 5, 3, 7],
-        'Maestro': ['Dr. García', 'Dra. López', 'Ing. Martínez', 'Dra. López'],
-        'Duracion_Horas': [2, 2, 1.5, 2],
-        'Sesiones_Semanales': [2, 2, 3, 2],
-        'Num_Estudiantes': [35, 40, 30, 25],
-        'Tipo_Salon_Requerido': ['Aula', 'Laboratorio', 'Aula', 'Aula']
+        "Grupo": grupos,
+        "Materia": materias,
+        "Semestre": semestres,
+        "Maestro": maestros_asignados,
+        "Duracion_Horas": [1.5] * n,
+        "Sesiones_Semanales": [2] * n,
+        "Num_Estudiantes": num_estudiantes,
+        "Tipo_Salon_Requerido": tipo_salon
     }
 
+    import pandas as pd
     return pd.DataFrame(data)
 
 def crear_plantilla_maestros():
-    """Crea un DataFrame de ejemplo para maestros"""
+    """Crea un DataFrame de ejemplo para maestros (máx 25 docentes)"""
+
+    maestros = [
+        "Alejandro Carrillo", "Andres Cortinas", "Magaly Parra", "Claudia Grado",
+        "Jose Manuel Gutierrez Salinas", "Patricia Holguin", "Ruben Enrique Soto Moguel",
+        "Jose Rodriguez", "Luz Elena Cano", "Paola Sanchez",
+        "Alfredo Gomez", "Gerardo Salas", "Karina Villalobos", "Abraham Tellez",
+        "Cesar Lozano", "Rodolfo Morales", "Guillermo Arellano", "Daniel Gutierrez",
+        "Rita Gutierrez", "Javier Reyes",
+        "Alejandra Quintana", "Ana Laura Rojas", "Marco Antonio Escobedo",
+        "Esteban Flores", "Carlos Martinez"
+    ]
+
+    n = len(maestros)  # 25
+
     data = {
-        'Maestro': ['Dr. García', 'Dra. López', 'Ing. Martínez'],
-        'Lunes': ['7-15', '9-18', '7-21'],
-        'Martes': ['7-15', '9-18', '7-21'],
-        'Miercoles': ['7-15', '9-18', '7-21'],
-        'Jueves': ['7-15', '9-18', '7-21'],
-        'Viernes': ['7-15', '9-18', '7-21']
+        "Maestro": maestros,
+        "Lunes":    ["7-21"] * n,
+        "Martes":   ["7-21"] * n,
+        "Miercoles":["7-21"] * n,
+        "Jueves":   ["7-21"] * n,
+        "Viernes":  ["7-21"] * n,
     }
+
+    import pandas as pd
     return pd.DataFrame(data)
 
 def crear_plantilla_salones():
-    """Crea un DataFrame de ejemplo para salones"""
+    """Crea un DataFrame de salones con solo 10 salones, usando datos reales AD25"""
+
     data = {
-        'Salon': ['A101', 'A102', 'B201'],
-        'Capacidad': [40, 35, 50],
-        'Tipo': ['Aula', 'Aula', 'Laboratorio']
+        'Salon': [
+            '1101', '1102', '1103', '1104', '1105',
+            '1201', '1202', '1203',
+            '1301', '1304'
+        ],
+        'Capacidad': [
+            26, 28, 24, 28, 35,
+            40, 40, 38,
+            42, 48
+        ],
+        'Tipo': [
+            'Laboratorio', 'Laboratorio', 'Laboratorio', 'Laboratorio', 'Aula',
+            'Laboratorio', 'Aula', 'Aula',
+            'Aula', 'Laboratorio'
+        ]
     }
+
+    import pandas as pd
     return pd.DataFrame(data)
 
 # Función para parsear horarios de disponibilidad
