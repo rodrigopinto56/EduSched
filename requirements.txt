@@ -4,4 +4,4 @@ plotly==6.4.0
 psycopg2-binary==2.9.11
 reportlab==4.4.4
 sqlalchemy==2.0.44
-streamlit==1.51.0
+streamlit==1.50.0 #Modificacion a 1.50 para ansible y terraform

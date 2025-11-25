@@ -1,0 +1,37 @@
+---
+- name: Setup base environment for bot de horarios
+  hosts: bot_horarios
+  become: yes 
+
+  tasks:
+    - name: Actualizar paquetes del sistema
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+
+    - name: Instalar paquetes base (git, python)
+      ansible.builtin.dnf:
+        name:
+          - git
+          - python3
+          - python3-pip
+        state: present
+
+    - name: Instalar PostgreSQL 15 (cliente y servidor)
+      ansible.builtin.dnf:
+        name:
+          - postgresql15.x86_64
+          - postgresql15-server
+        state: present
+
+    - name: Inicializar cluster PostgreSQL si no existe
+      ansible.builtin.command: postgresql-setup --initdb
+      args:
+        creates: /var/lib/pgsql/data/PG_VERSION
+
+    - name: Iniciar y habilitar el servicio de PostgreSQL
+      ansible.builtin.service:
+        name: postgresql     
+        state: started
+        enabled: yes
+        
