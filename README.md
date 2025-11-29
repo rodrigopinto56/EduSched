@@ -1,52 +1,43 @@
-# Overview
+# Resumen
 
-This is an academic schedule generation system built with Streamlit. The application helps educational institutions create optimized class schedules by considering various constraints such as teacher availability, classroom capacity, student enrollment, and semester priorities. The system provides an interactive web interface for uploading course data, generating schedules, and exporting results in various formats including PDF reports and visual calendars.
+Este es un sistema el cual ayuda al usuario a crear horarios automaticos con un bot personalizado a plantillas especificas que pueda leer la informacion que el usuario cargue al sistema, se realizo con finalidad a Tecmilenio Chih. para exposicion en proyecto en la ExpoTecmi se realiza en forma general pero enfocado en zona administrativa encargados de realizar horarios hacia el alumnado, con la finalidad de recortar tiempos de creacion de horarios de 2 meses a una semana dando eficacia en este sistema completo.
 
-# User Preferences
+# Arquitectura del Sistema
+ 
+Este sistema realizado con lenguaje python para configurar el bot de una manera eficaz, tambien se le implemento terraform y ansible para otro proyecto.
 
-Preferred communication style: Simple, everyday language.
+## Frontend Arquitectura
 
-# System Architecture
+**Tecnologia**: Streamlit web framework 
+- **Enfoque**: Aplicación de una sola página con gestión del estado de la sesión para mantener los datos del usuario en todas las interacciones.
+- **Características clave**:
+- Capacidad de carga de archivos para la entrada de datos por lotes.
+- Edición interactiva de datos con editores de datos.
+- Visualización de horarios en tiempo real.
+- Función de exportación de horarios generados.
 
-## Frontend Architecture
+**Gestión del estado de la sesión**
+- Almacena horarios generados, datos de grupos, datos de profesores y datos de aulas.
+- Mantiene el estado del horario editado para preservar las modificaciones del usuario.
+- Permite un flujo de trabajo de varios pasos sin pérdida de datos.
 
-**Technology**: Streamlit web framework
-- **Rationale**: Provides rapid development of interactive data applications with minimal frontend code
-- **Approach**: Single-page application with session state management for maintaining user data across interactions
-- **Key Features**: 
-  - File upload capabilities for batch data input
-  - Interactive data editing with data editors
-  - Real-time schedule visualization
-  - Export functionality for generated schedules
 
-**Session State Management**
-- Stores generated schedules, group data, teacher data, and classroom data
-- Maintains edited schedule state to preserve user modifications
-- Enables multi-step workflow without data loss
+## Backend Arquitectura
 
-## Backend Architecture
+**Lógica de procesamiento**: Algoritmo de generación de horarios basado en Python
+- **Restricciones gestionadas**:
+- Conflictos de disponibilidad del profesorado
+- Adaptación de la capacidad del aula
+- Distribución de sesiones a lo largo de la semana
+- Disponibilidad de franjas horarias
+- Requisitos de duración
 
-**Processing Logic**: Python-based schedule generation algorithm
-- **Core Algorithm**: Constraint-based scheduling with semester prioritization
-- **Approach**: Processes groups in order of semester priority (higher semesters scheduled first)
-- **Constraints Handled**:
-  - Teacher availability conflicts
-  - Classroom capacity matching
-  - Session distribution across week
-  - Time slot availability
-  - Duration requirements
-
-**Time Management**
-- Operating hours: 7 AM to 9 PM
-- Configurable session durations
-- Support for multi-hour class blocks
+**Gestión del tiempo**
+- Horario: de 7:00 a 21:00
+- Duración de las sesiones configurable
+- Compatibilidad con bloques de clases de varias horas
 
 ## Data Storage
-
-**In-Memory Storage**: Session-based data persistence
-- **Rationale**: Simplifies deployment and eliminates database setup requirements for small-scale use
-- **Limitation**: Data is not persisted between sessions
-- **Data Structures**: Pandas DataFrames for tabular data manipulation
 
 **Data Models**:
 1. **Groups**: Course sections with metadata (semester, teacher, duration, frequency, enrollment)
@@ -54,46 +45,33 @@ Preferred communication style: Simple, everyday language.
 3. **Classrooms**: Room details including capacity
 4. **Schedules**: Generated timetables with day/time slot assignments
 
-## Report Generation
 
-**PDF Export**: ReportLab library
-- **Format**: Letter size, landscape orientation for schedule tables
-- **Content**: Formatted tables with styling and metadata
-- **Rationale**: Provides professional, printable output for administrative use
+## Bibliotecas principales
 
-**Visual Calendar**: Plotly graphs
-- **Type**: Interactive Gantt-style timeline visualization
-- **Features**: Color-coded by group, hover information, zoomable interface
-- **Rationale**: Enables quick visual verification of schedule conflicts and distribution
+1. **Streamlit** - Framework de aplicación web
+- Propósito: Framework de interfaz de usuario principal para la aplicación
+- Funciones utilizadas: Carga de archivos, editores de datos, estado de sesión, componentes de diseño
 
-# External Dependencies
+2. **Pandas** - Manipulación de datos
+- Propósito: Procesamiento de datos tabulares y manejo de CSV
+- Casos de uso: Estructuras de datos de programación, operaciones de importación/exportación
 
-## Core Libraries
+3. **ReportLab** - Generación de PDF
+- Propósito: Creación de informes profesionales
+- Componentes: SimpleDocTemplate, diseños de tabla, estilos
 
-1. **Streamlit** - Web application framework
-   - Purpose: Primary UI framework for the application
-   - Features used: File uploads, data editors, session state, layout components
-
-2. **Pandas** - Data manipulation
-   - Purpose: Tabular data processing and CSV handling
-   - Use cases: Schedule data structures, import/export operations
-
-3. **ReportLab** - PDF generation
-   - Purpose: Professional report creation
-   - Components: SimpleDocTemplate, Table layouts, styling
-
-4. **Plotly** - Data visualization
-   - Purpose: Interactive schedule timeline visualization
-   - Chart type: Gantt/timeline charts for schedule display
+4. **Plotly** - Visualización de datos
+- Propósito: Visualización interactiva de la línea de tiempo de la programación
+- Tipo de gráfico: Diagramas de Gantt/línea de tiempo para la visualización de la programación
 
 ## Python Standard Library
 
 - **datetime/time/timedelta**: Time-based calculations and schedule slot management
 - **io**: In-memory file handling for PDF generation and downloads
 
-## No External Services
+## Sin servicios externos
 
-- No database connections (uses in-memory storage)
-- No authentication services (single-user application)
-- No external APIs or cloud services
-- No third-party scheduling services
+- Sin conexiones a bases de datos (utiliza almacenamiento en memoria)
+- Sin servicios de autenticación (aplicación monousuario)
+- Sin API externas ni servicios en la nube
+- Sin servicios de programación de tercerosg services
