@@ -19,6 +19,8 @@ st.set_page_config(
     layout="wide"
 )
 
+st.markdown("---")
+
 # Inicializar session state
 if 'horario_generado' not in st.session_state:
     st.session_state.horario_generado = None
@@ -46,6 +48,73 @@ except Exception as e:
 st.title("Generador de Horarios Académicos")
 st.markdown("### Sistema inteligente de generación de horarios con priorización por semestre")
 
+def estilo_clean():
+    st.markdown("""
+        <style>
+        /* Fondo degradado sutil */
+        .stApp {
+            background: linear-gradient(to bottom right, #ffffff, #f0f2f6);
+        }
+
+        /* Tarjetas con sombra suave (Glassmorphism ligero) */
+        div[data-testid="stExpander"], div[data-testid="stForm"] {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 10px;
+            border: none;
+        }
+
+        /* Botones redondeados y elegantes */
+        .stButton>button {
+            background-color: #2c3e50;
+            color: white;
+            border-radius: 20px;
+            padding: 10px 24px;
+            border: none;
+        }
+        .stButton>button:hover {
+            background-color: #34495e;
+            transform: translateY(-2px); /* Efecto de elevación */
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+# Llama a la función
+def style_clean():
+    st.markdown("""
+        <style>
+        /* Fondo degradado sutil */
+        .stApp {
+            background: linear-gradient(to bottom right, #ffffff, #f0f2f6);
+        }
+
+        /* Tarjetas con sombra suave (Glassmorphism ligero) */
+        div[data-testid="stExpander"], div[data-testid="stForm"] {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 10px;
+            border: none;
+        }
+
+        /* Botones redondeados y elegantes */
+        .stButton>button {
+            background-color: #2c3e50;
+            color: white;
+            border-radius: 20px;
+            padding: 10px 24px;
+            border: none;
+        }
+        .stButton>button:hover {
+            background-color: #34495e;
+            transform: translateY(-2px); /* Efecto de elevación */
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+# Llama a la función
+style_clean()
 # Función para crear plantilla de ejemplo
 def crear_plantilla_grupos():
     """Crea un DataFrame de ejemplo para 40 grupos usando máximo 25 maestros."""

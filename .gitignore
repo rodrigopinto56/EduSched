@@ -52,7 +52,28 @@ Thumbs.db
 dist/
 build/
 
+
+# Llaves y certificados
+*.pem
+
+# Configuración local
+HorarioComodoBotUpdates/
+.local/
+.streamlit/config.toml
+
 # Terraform
+*.tfstate
+*.tfstate.*
 **/.terraform/*
 **/.terraform/*
 .terraform.lock.hcl
+.terraform/
+terraform-bot-horarios/.terraform/
+terraform-bot-horarios/terraform.tfstate
+terraform-bot-horarios/terraform.tfstate.backup
+
+# Ansible 
+ansible-bot-horarios/hosts.ini
+ansible-bot-horarios/db_setup.yml
+ansible-bot-horarios/setup_base.yml
+ansible-bot-horarios/deploy_app.yml
